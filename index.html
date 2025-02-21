@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronos - Track Time with Style</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: rgba(209, 13, 88, 0.9);
+            --primary-light: rgba(104, 106, 247, 0.9);
+            --secondary: rgba(168, 85, 247, 0.9);
+            --accent: rgba(236, 72, 153, 0.9);
+            --bg-light: rgba(255, 255, 255, 0.8);
+            --bg-dark: rgba(10, 9, 22, 0.8);
+            --text-light: #1e293b;
+            --text-dark: #f8fafc;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: url('https://source.unsplash.com/1920x1080/?time,clock');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+
+        body.dark-theme {
+            background-image: url('https://source.unsplash.com/1920x1080/?night,stars');
+        }
+
+        .container {
+            background-color: var(--bg-light);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(29, 25, 25, 0.18);
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .app-header {
+            margin-bottom: 2rem;
+        }
+
+        .app-title {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-tagline {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            font-style: italic;
+        }
+
+        .countdown {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .time-segment {
+            margin: 0 1rem;
+            position: relative;
+            perspective: 1000px;
+        }
+
+        .time-segment .number {
+            font-size: 6rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .time-segment .number.flip {
+            animation: flip 0.6s ease-in-out;
+        }
+
+        @keyframes flip {
+            0% { transform: rotateX(0); }
+            50% { transform: rotateX(90deg); }
+            100% { transform: rotateX(0); }
+        }
+
+        .time-segment .label {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            background-color: var(--primary);
+            color: var(--text-dark);
+            border: none;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn i {
+            font-size: 1.4rem;
+        }
+
+        .time-input {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .time-input input {
+            width: 80px;
+            padding: 10px;
+            font-size: 1.2rem;
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .laps {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+        }
+
+        .lap-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--primary-light);
+        }
+
+        .quote {
+            margin-top: 2rem;
+            font-style: italic;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+        }
+
+        .dark-theme {
+            --bg-light: var(--bg-dark);
+            --text-light: var(--text-dark);
+        }
+
+        @media (max-width: 768px) {
+            .countdown {
+                flex-wrap: wrap;
+            }
+            .time-segment .number {
+                font-size: 4rem;
+            }
+            .time-input, .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <h1 class="app-title">Chronos</h1>
+            <p class="app-tagline">Time is precious, track it with style</p>
+        </div>
+
+        <div class="countdown">
+            <div class="time-segment">
+                <div class="number" id="days">00</div>
+                <div class="label">Days</div>
+            </div>
+            <div class="time-segment">
+                <div class="number" id="hours">00</div>
+                <div class="label">Hours</div>
+            </div>
+            <div class="time-segment">
+                <div class="number" id="minutes">00</div>
+                <div class="label">Minutes</div>
+            </div>
+            <div class="time-segment">
+                <div class="number" id="seconds">00</div>
+                <div class="label">Seconds</div>
+            </div>
+        </div>
+        
+        <div class="time-input">
+            <input type="number" id="inputDays" min="0" placeholder="Days">
+            <input type="number" id="inputHours" min="0" max="23" placeholder="Hours">
+            <input type="number" id="inputMinutes" min="0" max="59" placeholder="Minutes">
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="startBtn"><i class="fas fa-play"></i> Start</button>
+            <button class="btn" id="stopBtn"><i class="fas fa-stop"></i> Stop</button>
+            <button class="btn" id="lapBtn"><i class="fas fa-flag"></i> Lap</button>
+            <button class="btn" id="resetBtn"><i class="fas fa-undo"></i> Reset</button>
+            <button class="btn" id="themeBtn"><i class="fas fa-adjust"></i> Theme</button>
+        </div>
+
+        <div class="quote" id="quoteContainer"></div>
+
+        <div class="laps" id="lapsContainer"></div>
+    </div>
+
+    <script>
+        class AestheticCountdown {
+            constructor() {
+                this.countdownDate = null;
+                this.interval = null;
+                this.isRunning = false;
+                this.laps = [];
+                this.quotes = [
+                    "The two most powerful warriors are patience and time. - Leo Tolstoy",
+                    "Time is what we want most, but what we use worst. - William Penn",
+                    "Lost time is never found again. - Benjamin Franklin",
+                    "The key is in not spending time, but in investing it. - Stephen R. Covey",
+                    "Time is the most valuable thing a man can spend. - Theophrastus",
+                    "Time is a created thing. To say 'I don't have time' is to say 'I don't want to'. - Lao Tzu",
+                    "The future starts today, not tomorrow. - Pope John Paul II",
+                    "Yesterday's the past, tomorrow's the future, but today is a gift. That's why it's called the present. - Bil Keane",
+                    "Time is free, but it's priceless. You can't own it, but you can use it. You can't keep it, but you can spend it. Once you've lost it, you can never get it back. - Harvey MacKay",
+                    "The trouble is, you think you have time. - Buddha"
+                ];
+
+                this.elements = {
+                    days: document.getElementById('days'),
+                    hours: document.getElementById('hours'),
+                    minutes: document.getElementById('minutes'),
+                    seconds: document.getElementById('seconds'),
+                    inputDays: document.getElementById('inputDays'),
+                    inputHours: document.getElementById('inputHours'),
+                    inputMinutes: document.getElementById('inputMinutes'),
+                    startBtn: document.getElementById('startBtn'),
+                    stopBtn: document.getElementById('stopBtn'),
+                    lapBtn: document.getElementById('lapBtn'),
+                    resetBtn: document.getElementById('resetBtn'),
+                    themeBtn: document.getElementById('themeBtn'),
+                    lapsContainer: document.getElementById('lapsContainer'),
+                    quoteContainer: document.getElementById('quoteContainer')
+                };
+
+                this.bindEvents();
+                this.showRandomQuote();
+            }
+
+            bindEvents() {
+                this.elements.startBtn.addEventListener('click', () => this.start());
+                this.elements.stopBtn.addEventListener('click', () => this.stop());
+                this.elements.lapBtn.addEventListener('click', () => this.lap());
+                this.elements.resetBtn.addEventListener('click', () => this.reset());
+                this.elements.themeBtn.addEventListener('click', () => this.toggleTheme());
+            }
+
+            start() {
+                if (this.isRunning) return;
+
+                const days = parseInt(this.elements.inputDays.value) || 0;
+                const hours = parseInt(this.elements.inputHours.value) || 0;
+                const minutes = parseInt(this.elements.inputMinutes.value) || 0;
+
+                const totalMilliseconds = (days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60) * 1000;
+
+                if (totalMilliseconds <= 0) {
+                    alert("Please set a valid time for the countdown.");
+                    return;
+                }
+
+                this.countdownDate = new Date().getTime() + totalMilliseconds;
+                this.isRunning = true;
+                this.interval = setInterval(() => this.updateCountdown(), 1000);
+                this.showRandomQuote();
+            }
+
+            stop() {
+                if (!this.isRunning) return;
+                clearInterval(this.interval);
+                this.isRunning = false;
+            }
+
+            lap() {
+                if (!this.isRunning) return;
+                const currentTime = this.getTimeLeft();
+                this.laps.push(currentTime);
+                this.renderLaps();
+            }
+
+            reset() {
+                this.stop();
+                this.countdownDate = null;
+                this.laps = [];
+                this.updateDisplay({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+                this.renderLaps();
+                this.elements.inputDays.value = '';
+                this.elements.inputHours.value = '';
+                this.elements.inputMinutes.value = '';
+                this.showRandomQuote();
+            }
+
+            updateCountdown() {
+                const timeLeft = this.getTimeLeft();
+                this.updateDisplay(timeLeft);
+
+                if (timeLeft.total <= 0) {
+                    this.stop();
+                    this.showRandomQuote();
+                }
+            }
+
+            getTimeLeft() {
+                const now = new Date().getTime();
+                const distance = this.countdownDate - now;
+
+                return {
+                    total: distance,
+                    days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                    minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+                    seconds: Math.floor((distance % (1000 * 60)) / 1000)
+                };
+            }
+
+            updateDisplay(time) {
+                this.updateSegment(this.elements.days, time.days);
+                this.updateSegment(this.elements.hours, time.hours);
+                this.updateSegment(this.elements.minutes, time.minutes);
+                this.updateSegment(this.elements.seconds, time.seconds);
+            }
+
+            updateSegment(element, value) {
+                const newValue = value.toString().padStart(2, '0');
+                if (element.textContent !== newValue) {
+                    element.classList.add('flip');
+                    element.textContent = newValue;
+                    setTimeout(() => element.classList.remove('flip'), 500);
+                }
+            }
+
+            renderLaps() {
+                this.elements.lapsContainer.innerHTML = '';
+                this.laps.forEach((lap, index) => {
+                    const lapItem = document.createElement('div');
+                    lapItem.classList.add('lap-item');
+                    lapItem.textContent = `Lap ${index + 1}: ${lap.days}d ${lap.hours}h ${lap.minutes}m ${lap.seconds}s`;
+                    this.elements.lapsContainer.appendChild(lapItem);
+                });
+            }
+
+            toggleTheme() {
+                document.body.classList.toggle('dark-theme');
+                this.updateBackgroundImage();
+            }
+
+            updateBackgroundImage() {
+                const isDarkTheme = document.body.classList.contains('dark-theme');
+                const imageQuery = isDarkTheme ? 'night,stars' : 'time,clock';
+                document.body.style.backgroundImage = `url('https://source.unsplash.com/1920x1080/?${imageQuery}')`;
+            }
+
+            showRandomQuote() {
+                const randomIndex = Math.floor(Math.random() * this.quotes.length);
+                this.elements.quoteContainer.textContent = this.quotes[randomIndex];
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new AestheticCountdown();
+        });
+    </script>
+</body>
+</html>
