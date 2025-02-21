@@ -1,3 +1,7 @@
+Tic Tac Toe Game
+Preview
+Code
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,27 +9,34 @@
     <title>Tic Tac Toe</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
 
         body {
+            font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            background: #f0f2f5;
             padding: 20px;
-            color: white;
-            font-family: 'Arial', sans-serif;
         }
 
-        .game-title {
-            font-size: 2.5em;
+        .controls {
             margin-bottom: 20px;
-            color: #ffd700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .mode-select, .difficulty-select {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
         }
 
         .board {
@@ -38,48 +49,23 @@
         .cell {
             width: 100px;
             height: 100px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 48px;
-            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background-color 0.3s;
         }
 
         .cell:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
-        }
-
-        .controls {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 20px;
-        }
-
-        select {
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-        }
-
-        .status {
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-align: center;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
+            background: #f5f5f5;
         }
 
         .score {
-            font-size: 20px;
+            font-size: 24px;
             margin-bottom: 20px;
             text-align: center;
         }
@@ -92,61 +78,52 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s;
         }
 
         .reset-btn:hover {
             background: #45a049;
         }
 
-        .player-x {
-            color: #ff4757;
-        }
-
-        .player-o {
-            color: #2ed573;
-        }
-
-        .win-line {
-            position: absolute;
-            background: #ffd700;
+        .status {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
         }
     </style>
 </head>
 <body>
-    <h1 class="game-title">Tic Tac Toe</h1>
-    
     <div class="controls">
-        <select id="gameMode">
-            <option value="human">vs Human</option>
+        <select class="mode-select">
             <option value="ai">vs AI</option>
+            <option value="human">vs Human</option>
         </select>
-        <select id="difficulty" style="display: none;">
+        <select class="difficulty-select">
             <option value="easy">Easy</option>
             <option value="medium">Medium</option>
             <option value="hard">Hard</option>
         </select>
     </div>
-
+    
     <div class="status">Player X's turn</div>
-
+    
     <div class="board">
-        <div class="cell" data-cell></div>
-        <div class="cell" data-cell></div>
-        <div class="cell" data-cell></div>
-        <div class="cell" data-cell></div>
-        <div class="cell" data-cell></div>
-        <div class="cell" data-cell></div>
-        <div class="cell" data-cell></div>
-        <div class="cell" data-cell></div>
-        <div class="cell" data-cell></div>
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
     </div>
-
+    
     <div class="score">
-        X Score: <span id="scoreX">0</span> |
-        O Score: <span id="scoreO">0</span>
+        X Score: <span id="x-score">0</span>
+        O Score: <span id="o-score">0</span>
     </div>
-
+    
     <button class="reset-btn">Reset Game</button>
 
     <script>
@@ -154,91 +131,88 @@
             constructor() {
                 this.board = Array(9).fill('');
                 this.currentPlayer = 'X';
-                this.gameOver = false;
                 this.scores = { X: 0, O: 0 };
-                
+                this.gameOver = false;
+
                 // DOM elements
-                this.cells = [...document.querySelectorAll('[data-cell]')];
+                this.cells = document.querySelectorAll('.cell');
                 this.status = document.querySelector('.status');
-                this.resetButton = document.querySelector('.reset-btn');
-                this.gameModeSelect = document.getElementById('gameMode');
-                this.difficultySelect = document.getElementById('difficulty');
-                
+                this.resetBtn = document.querySelector('.reset-btn');
+                this.modeSelect = document.querySelector('.mode-select');
+                this.difficultySelect = document.querySelector('.difficulty-select');
+
                 // Initialize event listeners
-                this.initializeGame();
-            }
-
-            initializeGame() {
-                this.cells.forEach((cell, index) => {
-                    cell.addEventListener('click', () => this.handleCellClick(index));
+                this.cells.forEach(cell => {
+                    cell.addEventListener('click', () => this.makeMove(cell));
                 });
-
-                this.resetButton.addEventListener('click', () => this.resetGame());
-
-                this.gameModeSelect.addEventListener('change', () => {
+                this.resetBtn.addEventListener('click', () => this.resetGame());
+                this.modeSelect.addEventListener('change', () => this.resetGame());
+                
+                // Update difficulty select visibility
+                this.modeSelect.addEventListener('change', () => {
                     this.difficultySelect.style.display = 
-                        this.gameModeSelect.value === 'ai' ? 'block' : 'none';
-                    this.resetGame();
+                        this.modeSelect.value === 'ai' ? 'block' : 'none';
                 });
             }
 
-            handleCellClick(index) {
-                if (this.gameOver || this.board[index] !== '') return;
+            makeMove(cell) {
+                const index = cell.dataset.index;
+                
+                if (this.board[index] || this.gameOver) return;
 
-                this.makeMove(index);
-
-                if (!this.gameOver && this.gameModeSelect.value === 'ai' && this.currentPlayer === 'O') {
-                    setTimeout(() => this.makeAIMove(), 500);
-                }
-            }
-
-            makeMove(index) {
                 this.board[index] = this.currentPlayer;
-                this.cells[index].textContent = this.currentPlayer;
-                this.cells[index].classList.add(`player-${this.currentPlayer.toLowerCase()}`);
-
+                cell.textContent = this.currentPlayer;
+                
                 if (this.checkWin()) {
                     this.handleWin();
-                } else if (this.checkDraw()) {
+                    return;
+                }
+                
+                if (this.checkDraw()) {
                     this.handleDraw();
-                } else {
-                    this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
-                    this.updateStatus();
+                    return;
+                }
+
+                this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+                this.status.textContent = `Player ${this.currentPlayer}'s turn`;
+
+                // AI move if in AI mode and it's O's turn
+                if (this.modeSelect.value === 'ai' && this.currentPlayer === 'O') {
+                    setTimeout(() => this.makeAIMove(), 500);
                 }
             }
 
             makeAIMove() {
                 const difficulty = this.difficultySelect.value;
-                let index;
+                let move;
 
                 switch(difficulty) {
                     case 'hard':
-                        index = this.getBestMove();
+                        move = this.getBestMove();
                         break;
                     case 'medium':
-                        index = Math.random() < 0.5 ? this.getBestMove() : this.getRandomMove();
+                        move = Math.random() < 0.7 ? this.getBestMove() : this.getRandomMove();
                         break;
                     case 'easy':
-                        index = this.getRandomMove();
+                        move = this.getRandomMove();
                         break;
                 }
 
-                if (index !== null) {
-                    this.makeMove(index);
+                if (move !== undefined) {
+                    this.makeMove(this.cells[move]);
                 }
             }
 
             getBestMove() {
-                // Minimax algorithm for unbeatable AI
                 let bestScore = -Infinity;
-                let bestMove = null;
+                let bestMove;
 
                 for (let i = 0; i < 9; i++) {
-                    if (this.board[i] === '') {
+                    if (!this.board[i]) {
                         this.board[i] = 'O';
                         let score = this.minimax(this.board, 0, false);
                         this.board[i] = '';
-
+                        
                         if (score > bestScore) {
                             bestScore = score;
                             bestMove = i;
@@ -250,30 +224,29 @@
             }
 
             minimax(board, depth, isMaximizing) {
-                let result = this.checkWinCondition();
-                if (result !== null) {
-                    return result === 'O' ? 1 : result === 'X' ? -1 : 0;
-                }
+                const winner = this.checkWinningPlayer();
+                
+                if (winner === 'O') return 10 - depth;
+                if (winner === 'X') return depth - 10;
+                if (this.checkDraw()) return 0;
 
                 if (isMaximizing) {
                     let bestScore = -Infinity;
                     for (let i = 0; i < 9; i++) {
-                        if (board[i] === '') {
+                        if (!board[i]) {
                             board[i] = 'O';
-                            let score = this.minimax(board, depth + 1, false);
+                            bestScore = Math.max(bestScore, this.minimax(board, depth + 1, false));
                             board[i] = '';
-                            bestScore = Math.max(score, bestScore);
                         }
                     }
                     return bestScore;
                 } else {
                     let bestScore = Infinity;
                     for (let i = 0; i < 9; i++) {
-                        if (board[i] === '') {
+                        if (!board[i]) {
                             board[i] = 'X';
-                            let score = this.minimax(board, depth + 1, true);
+                            bestScore = Math.min(bestScore, this.minimax(board, depth + 1, true));
                             board[i] = '';
-                            bestScore = Math.min(score, bestScore);
                         }
                     }
                     return bestScore;
@@ -302,12 +275,18 @@
                 });
             }
 
-            checkWinCondition() {
-                if (this.checkWin()) {
-                    return this.currentPlayer;
-                }
-                if (this.checkDraw()) {
-                    return 'draw';
+            checkWinningPlayer() {
+                const winPatterns = [
+                    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                    [0, 4, 8], [2, 4, 6]
+                ];
+
+                for (let pattern of winPatterns) {
+                    const [a, b, c] = pattern;
+                    if (this.board[a] && this.board[a] === this.board[b] && this.board[a] === this.board[c]) {
+                        return this.board[a];
+                    }
                 }
                 return null;
             }
@@ -319,7 +298,7 @@
             handleWin() {
                 this.gameOver = true;
                 this.scores[this.currentPlayer]++;
-                this.updateScore();
+                this.updateScoreDisplay();
                 this.status.textContent = `Player ${this.currentPlayer} wins!`;
             }
 
@@ -328,24 +307,22 @@
                 this.status.textContent = "It's a draw!";
             }
 
-            updateStatus() {
-                this.status.textContent = `Player ${this.currentPlayer}'s turn`;
-            }
-
-            updateScore() {
-                document.getElementById('scoreX').textContent = this.scores.X;
-                document.getElementById('scoreO').textContent = this.scores.O;
+            updateScoreDisplay() {
+                document.getElementById('x-score').textContent = this.scores.X;
+                document.getElementById('o-score').textContent = this.scores.O;
             }
 
             resetGame() {
                 this.board = Array(9).fill('');
-                this.cells.forEach(cell => {
-                    cell.textContent = '';
-                    cell.classList.remove('player-x', 'player-o');
-                });
+                this.cells.forEach(cell => cell.textContent = '');
                 this.currentPlayer = 'X';
                 this.gameOver = false;
-                this.updateStatus();
+                this.status.textContent = "Player X's turn";
+            }
+
+            resetScores() {
+                this.scores = { X: 0, O: 0 };
+                this.updateScoreDisplay();
             }
         }
 
